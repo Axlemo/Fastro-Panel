@@ -1,8 +1,9 @@
 import * as HTTP from "http";
 
+import { SessionModel } from "../../../database/provider";
+
 import { CookieOptions, ContentType, InputTypes, HttpMethod } from "../../_types";
 
-import Session from "../auth/objects/SessionObject";
 import CookieBuilder from "./CookieBuilder";
 
 type ContextBinding = {
@@ -11,7 +12,7 @@ type ContextBinding = {
 };
 
 export default class RequestContext {
-    constructor({ req, res }: ContextBinding, reqId: string, template: object, session?: Session) {
+    constructor({ req, res }: ContextBinding, reqId: string, template: object, session?: SessionModel) {
         this.session = session;
         this.requestId = reqId;
         this.template = template;
@@ -30,7 +31,7 @@ export default class RequestContext {
 
     public template: object;
 
-    public session?: Session;
+    public session?: SessionModel;
 
     public input: InputTypes;
 

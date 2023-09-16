@@ -1,4 +1,5 @@
 import Chalk from "chalk";
+import DotEnv from "dotenv";
 
 import { LogColor, LogColorBright } from "./utils/Logging";
 
@@ -16,6 +17,8 @@ function clog(msg: string, color: LogColor | LogColorBright = "white") {
 function errlog(error: Error) {
     clog(error.message + error.stack, "red");
 }
+
+DotEnv.config();
 
 process.on("uncaughtException", errlog);
 process.on("unhandledRejection", errlog);

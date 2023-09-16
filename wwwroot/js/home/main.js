@@ -41,6 +41,36 @@ function snackbar(message, timeout = 2000) {
     }, toast.MaterialSnackbar.Constant_.ANIMATION_LENGTH);
 }
 
+$("#change-pwd").click(async () => {
+    Swal.fire({
+        title: "Change your password",
+        html: `<input id="swal-input1" class="swal2-input" placeholder="Current password" type="password">` +
+            `<input id="swal-input2" class="swal2-input" placeholder="New password" type="password">` +
+            `<input id="swal-input3" class="swal2-input" placeholder="Confirm new password" type="password">`,
+        showLoaderOnConfirm: true,
+        showCancelButton: true,
+        reverseButtons: true,
+        confirmButtonText: "Change",
+        cancelButtonText: "Cancel",
+        preConfirm: () => {
+            return resource.api.auth.changePassword("PATCH", {
+                "current_password": $("#swal-input1").val(),
+                "new_password": $("#swal-input2").val(),
+                "new_password_confirm": $("#swal-input3").val(),
+            }).then(() => {
+                Swal.fire({
+                    icon: "success",
+                    title: "Successfully changed password",
+                });
+            }).catch((e) => {
+                Swal.showValidationMessage(e.responseText);
+            });
+        },
+    }).then(async (result) => {
+        if (!result.isConfirmed) return;
+    });
+});
+
 $("#logout").click(async () => {
     if (logout) return;
     logout = true;

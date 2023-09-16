@@ -46,6 +46,7 @@ class Router {
 
 const auth = new Router("auth", "POST")
     .route("validate-login", "validateLogin")
+    .route("change-password", "changePassword")
     .route("register", "register")
     .route("logout", "logout");
 

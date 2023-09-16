@@ -8,3 +8,5 @@
 /node_modules
 *.js
 !wwwroot/**/*.js
+*.db
+.env

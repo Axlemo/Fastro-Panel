@@ -5,7 +5,9 @@ import * as WS from "ws";
 
 import { randomUUID } from "crypto";
 
-import { RequestContext, AuthManager, DirectoryRoute, InterfaceRoute, Session } from "./system/_classes";
+import { SessionModel, connect_db } from "./database/provider";
+
+import { RequestContext, AuthManager, DirectoryRoute, InterfaceRoute } from "./system/_classes";
 import { IHttpServiceHandler } from "./system/_interfaces";
 import { ContentType } from "./system/_types";
 import { Routes, loadRoutes } from "./system/http/routes";
@@ -22,11 +24,13 @@ export default class HTTPServer {
     constructor(log: LogDelegate) {
         this._log = log;
 
-        if (Conf.Websocket.EnableWebsocket) this.initWS();
-        this.initHTTP();
+        connect_db().then(() => {
+            if (Conf.Websocket.EnableWebsocket) this.initWS();
+            this.initHTTP();
 
-        log("Server loaded!", "blue");
-        log(`Global content cache key: ${this._cacheKey}`, "cyan");
+            log("Server loaded!", "blue");
+            log(`Global content cache key: ${this._cacheKey}`, "cyan");
+        });
     }
 
     private staticHandler!: IHttpServiceHandler;
@@ -66,10 +70,10 @@ export default class HTTPServer {
     }
 
     private listenHTTP() {
-        const server = HTTP.createServer((req, res) => {
+        const server = HTTP.createServer(async (req, res) => {
             try {
                 const context = new RequestContext({ req: req, res: res }, randomUUID(), this.getSharedTemplate,
-                    AuthManager.getUserSession(Utils.getCookies(req)[Conf.Session.CookieName]),
+                    await AuthManager.getUserSession(Utils.getCookies(req)[Conf.Session.CookieName]),
                 );
 
                 // All responses (except for top-level server exceptions) should apply headers
@@ -112,10 +116,10 @@ export default class HTTPServer {
         }).listen(process.env.PORT || Conf.Server.DefaultPort);
 
         if (Conf.Websocket.EnableWebsocket) {
-            server.on("upgrade", (req, socket, head) => {
-                const session = AuthManager.getUserSession(Utils.getCookies(req)[Conf.Session.CookieName]);
+            server.on("upgrade", async (req, socket, head) => {
+                const session = await AuthManager.getUserSession(Utils.getCookies(req)[Conf.Session.CookieName]);
 
-                if (!session?.isValid()) return req.destroy();
+                if (!session?.isValid) return req.destroy();
 
                 this.websocketHandler.server.handleUpgrade(req, socket, head, (ws) => {
                     this.websocketHandler.server.emit("connection", ws, session);
@@ -125,7 +129,7 @@ export default class HTTPServer {
     }
 
     private listenWS() {
-        this.websocketHandler.server.on("connection", (ws, session: Session) => {
+        this.websocketHandler.server.on("connection", (ws, session: SessionModel) => {
             this.websocketHandler.socketAttached(ws, session);
 
             ws.on("message", (data: string) => {

@@ -1,5 +1,3 @@
-import { UserLogin, UserRole } from "../system/_types";
-
 export default abstract class Configuration {
     static Server = {
         DefaultPort: 1337,
@@ -14,7 +12,7 @@ export default abstract class Configuration {
 
     static Static = {
         EnableStaticFileServer: true,
-        EnableClientCaching: true,
+        EnableClientCaching: false,
         VirtualDirectory: "/content/",
         PhysicalDirectory: "/wwwroot/",
         Integrated: {
@@ -38,21 +36,7 @@ export default abstract class Configuration {
         SpecialCharacters: false,
     }
 
-    // Changing the ID or NAME of accounts will invalidate the preset password
     static Security = {
-        DefaultUsers: {
-            "admin": {
-                id: 1,
-                // Password is 'admin'
-                passwd: "0a37b33d81e4e7f80ea89dd32e8ee12a939c154e6767cd035c467f8de1eadedc",
-                perms: {
-                    disabled: false,
-                    roles: [
-                        UserRole.ADMIN,
-                    ],
-                },
-            },
-        } as { [name: string]: UserLogin },
         AddSecurityHeaders: true,
     }
 };

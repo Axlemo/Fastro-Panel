@@ -53,9 +53,11 @@
     <Content Include="wwwroot\js\site.js" />
     <Content Include="wwwroot\vendors\css\bootstrap\bootstrap.css" />
     <Content Include="wwwroot\vendors\css\material\material.css" />
+    <Content Include="wwwroot\vendors\css\swal.css" />
     <Content Include="wwwroot\vendors\js\bootstrap.bundle.js" />
     <Content Include="wwwroot\vendors\js\jquery.js" />
     <Content Include="wwwroot\vendors\js\material.js" />
+    <Content Include="wwwroot\vendors\js\swal.js" />
     <None Include="server.ts" />
     <Content Include="tsconfig.json" />
     <Content Include="package.json" />
@@ -63,6 +65,7 @@
   <ItemGroup>
     <Folder Include="handlers\" />
     <Folder Include="handlers\http-service\" />
+    <Folder Include="database\" />
     <Folder Include="system\http\pages\login\" />
     <Folder Include="utils\" />
     <Folder Include="wwwroot\" />
@@ -104,6 +107,8 @@
     <Folder Include="wwwroot\vendors\js\" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="database\models.ts" />
+    <TypeScriptCompile Include="database\provider.ts" />
     <TypeScriptCompile Include="handlers\http-service\DynamicService.ts" />
     <TypeScriptCompile Include="handlers\http-service\StaticService.ts" />
     <TypeScriptCompile Include="handlers\WebsocketService.ts" />
@@ -120,7 +125,6 @@
     <TypeScriptCompile Include="utils\Logging.ts" />
     <TypeScriptCompile Include="utils\Toolbox.ts" />
     <TypeScriptCompile Include="system\_classes\auth\AuthManager.ts" />
-    <TypeScriptCompile Include="system\_classes\auth\objects\SessionObject.ts" />
     <TypeScriptCompile Include="system\_classes\auth\objects\UserObject.ts" />
     <TypeScriptCompile Include="system\_classes\http\CookieBuilder.ts" />
     <TypeScriptCompile Include="system\_classes\http\RequestContext.ts" />

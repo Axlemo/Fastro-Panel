@@ -1,10 +1,10 @@
 import assert from "assert";
 
+import { UserModel } from "../../../../database/provider";
+
 import { AuthManager, InterfaceRoute, JsonResult, NoContentResult, RequestContext } from "../../../_classes";
 import { IRequestResult } from "../../../_interfaces";
 import { UserRole } from "../../../_types";
-
-import Conf from "../../../../utils/Configuration";
 
 export class UserInfo extends InterfaceRoute {
     constructor() {
@@ -16,7 +16,16 @@ export class UserInfo extends InterfaceRoute {
     }
 
     async onRequest(context: RequestContext): Promise<IRequestResult> {
-        return new JsonResult(context.session!.parse());
+        const user = context.session!.user!;
+
+        return new JsonResult({
+            Username: user.name,
+            UserId: user.id,
+            SessionId: context.session!.id,
+            Permissions: user.roles?.map(
+                item => UserRole[item] as string
+            ),
+        });
     }
 };
 
@@ -31,14 +40,14 @@ export class UserList extends InterfaceRoute {
     }
 
     async onRequest(context: RequestContext): Promise<IRequestResult> {
-        const user_array = Object.entries(Conf.Security.DefaultUsers);
+        const user_array = await UserModel.findAll();
         const mapped_users: object[] = [];
 
         user_array.forEach(item => mapped_users.push({
-            Username: item[0],
-            UserId: item[1].id,
-            Disabled: item[1].perms.disabled,
-            Permissions: item[1].perms.roles?.map(
+            Username: item.name,
+            UserId: item.id,
+            Disabled: item.disabled,
+            Permissions: item.roles?.map(
                 item => UserRole[item] as string
             )
         }));
@@ -66,33 +75,31 @@ export class UserUpdate extends InterfaceRoute {
         });
     }
 
-    private checkUser(userId: number) {
+    private async checkUser(userId: number): Promise<UserModel> {
         assert(userId !== undefined, "You must provide a user identifier.");
 
-        const username = Object.keys(Conf.Security.DefaultUsers).find(
-            user => Conf.Security.DefaultUsers[user].id === userId
-        );
+        const user = await UserModel.findOne({ where: { id: userId } });
 
-        assert(username !== undefined, "The specified user does not exist.");
-        assert(Conf.Security.DefaultUsers[username].id !== 1, "You cannot modify the initial user.");
-        return username;
+        assert(user, "The specified user does not exist.");
+        assert(user.id !== 1, "You cannot modify the initial user.");
+        return user;
     }
 
     async PATCH(context: RequestContext): Promise<IRequestResult> {
         const data = context.input.body as UserBlockDetails;
-        const username = this.checkUser(data.user_id);
+        const user = await this.checkUser(data.user_id);
 
-        Conf.Security.DefaultUsers[username].perms.disabled = data.blocked;
+        await user.update({ disabled: data.blocked });
 
         return new NoContentResult();
     }
 
     async DELETE(context: RequestContext): Promise<IRequestResult> {
         const data = context.input.body as UserDeletionDetails;
-        const username = this.checkUser(data.user_id);
+        const user = await this.checkUser(data.user_id);
 
-        AuthManager.getUserSessions(data.user_id).forEach(session => session.invalidate());
-        delete Conf.Security.DefaultUsers[username];
+        (await AuthManager.getUserSessions(data.user_id)).forEach(async session => await session.destroy());
+        await user.destroy();
 
         return new NoContentResult();
     }

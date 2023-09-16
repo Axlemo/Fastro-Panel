@@ -28,11 +28,11 @@ export default class DynamicService implements IHttpServiceHandler {
                 if (!route.methods.includes(context.method)) return context.status(405).end();
             }
 
-            if (context.session?.isValid() || !route.requiresLogin) {
+            if (context.session?.isValid || !route.requiresLogin) {
                 if (route instanceof DirectoryRoute) {
                     context.contentType(ContentType.HTML);
 
-                    if (context.session?.isValid() && route.redirectIfAuthorized) {
+                    if (context.session?.isValid && route.redirectIfAuthorized) {
                         return context.redirect(route.redirectIfAuthorized);
                     }
                 }
@@ -65,7 +65,7 @@ export default class DynamicService implements IHttpServiceHandler {
                     context.status(400).end("Invalid data submitted.");
                 }
             }
-            else if (!context.session?.isValid()) {
+            else if (!context.session?.isValid) {
                 if (route instanceof InterfaceRoute) {
                     return context.status(401).end();
                 }

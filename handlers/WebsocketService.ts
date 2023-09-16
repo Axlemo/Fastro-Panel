@@ -1,6 +1,6 @@
 import * as WS from "ws";
 
-import { Session } from "../system/_classes";
+import { SessionModel } from "../database/provider";
 
 import HTTPServer from "../server";
 
@@ -13,15 +13,15 @@ export default class WebsocketService {
     server: WS.Server;
     base: HTTPServer;
 
-    socketAttached(ws: WS.WebSocket, session: Session) {
-        this.base._log(`WebSocket client attached from user: ${session.user?.id}`);
+    socketAttached(ws: WS.WebSocket, session: SessionModel) {
+        this.base._log(`WebSocket client attached from user: ${session.userId}`);
     }
 
     socketDetached(ws: WS.WebSocket) {
 
     }
 
-    incomingMessage(data: string, session: Session) {
+    incomingMessage(data: string, session: SessionModel) {
 
     }
 };

@@ -28,7 +28,7 @@ export default class StaticService implements IHttpServiceHandler {
         });
 
         try {
-            if (!this.cache[path]) {
+            if (Conf.Static.EnableClientCaching && !this.cache[path]) {
                 const data = await Utils.readFile(path, ".");
 
                 if (contentType === ContentType.JS) {
@@ -43,6 +43,9 @@ export default class StaticService implements IHttpServiceHandler {
                 else {
                     this.cache[path] = data;
                 }
+            }
+            else {
+                this.cache[path] = await Utils.readFile(path, ".");
             }
 
             if (Conf.Static.EnableClientCaching) context.header("Cache-Control", "private, max-age=86400;");

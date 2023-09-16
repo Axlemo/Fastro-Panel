@@ -29,7 +29,7 @@ export default class Route implements RouteData, IRequestHandler {
     isUserAuthorized(context: RequestContext) {
         if (!this.requiredRoles || !context.session) return true;
 
-        return context.session.user.perms.roles?.some(r => this.requiredRoles!.includes(r)) ?? false;
+        return context.session.user?.roles.some(r => this.requiredRoles!.includes(r)) ?? false;
     }
 
     async onRequest(context: RequestContext): Promise<IRequestResult> {

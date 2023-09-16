@@ -1,6 +1,5 @@
 export { default as AuthManager } from "./auth/AuthManager";
 
-export { default as Session } from "./auth/objects/SessionObject";
 export { default as User } from "./auth/objects/UserObject";
 
 export { OkResult, NoContentResult } from "./http/result/status/2xxResult";
