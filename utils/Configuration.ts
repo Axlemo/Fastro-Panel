@@ -12,7 +12,7 @@ export default abstract class Configuration {
 
     static Static = {
         EnableStaticFileServer: true,
-        EnableClientCaching: false,
+        EnableClientCaching: true,
         VirtualDirectory: "/content/",
         PhysicalDirectory: "/wwwroot/",
         Integrated: {

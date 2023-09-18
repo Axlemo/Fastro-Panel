@@ -1,6 +1,6 @@
 import assert from "assert";
 
-import { UserModel } from "../../../../database/provider";
+import { UserModel } from "../../../../database/models";
 
 import { AuthManager, BadRequestResult, ForbiddenResult, InterfaceRoute, NoContentResult, RequestContext, UnauthorizedResult } from "../../../_classes";
 import { IRequestResult } from "../../../_interfaces";
@@ -18,6 +18,12 @@ export class Login extends InterfaceRoute {
             path: "auth/validate-login",
             methods: ["POST"],
             body: true,
+            ratelimit: {
+                maxRequests: 8,
+                timeout: 1e4,
+                preserveRate: false,
+                message: "Too many login attempts, try again later.",
+            },
         });
     }
 
@@ -25,7 +31,7 @@ export class Login extends InterfaceRoute {
         const data = context.input.body as LoginDetails;
 
         if (data.username && data.password) {
-            const result = await AuthManager.checkLogin(data.username, data.password);
+            const result = await AuthManager.checkLogin(data.username, data.password, context.req.socket.remoteAddress);
 
             if (result.success) {
                 context.cookie(result.cookie!);
@@ -54,6 +60,12 @@ export class Register extends InterfaceRoute {
             methods: ["POST"],
             body: true,
             //blocked: true,
+            ratelimit: {
+                maxRequests: 5,
+                timeout: 3e4,
+                preserveRate: true,
+                message: "Too many accounts created, try again later.",
+            },
         });
     }
 
@@ -97,6 +109,7 @@ export class ChangePassword extends InterfaceRoute {
             path: "auth/change-password",
             methods: ["PATCH"],
             body: true,
+            requiresLogin: true,
         });
     }
 
@@ -115,6 +128,7 @@ export class ChangePassword extends InterfaceRoute {
                 passwordHash: AuthManager.hashCredentials(data.new_password, user.name + user.id),
             });
 
+            await AuthManager.removeUserSessions(user.id);
             return new NoContentResult();
         }
 

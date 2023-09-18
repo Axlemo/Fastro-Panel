@@ -1,6 +1,6 @@
 import * as WS from "ws";
 
-import { SessionModel } from "../database/provider";
+import { SessionModel } from "../database/models";
 
 import HTTPServer from "../server";
 

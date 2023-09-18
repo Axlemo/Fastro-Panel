@@ -28,7 +28,7 @@ export default class StaticService implements IHttpServiceHandler {
         });
 
         try {
-            if (Conf.Static.EnableClientCaching && !this.cache[path]) {
+            if (!this.cache[path]) {
                 const data = await Utils.readFile(path, ".");
 
                 if (contentType === ContentType.JS) {
@@ -44,9 +44,6 @@ export default class StaticService implements IHttpServiceHandler {
                     this.cache[path] = data;
                 }
             }
-            else {
-                this.cache[path] = await Utils.readFile(path, ".");
-            }
 
             if (Conf.Static.EnableClientCaching) context.header("Cache-Control", "private, max-age=86400;");
 
@@ -55,7 +52,7 @@ export default class StaticService implements IHttpServiceHandler {
             context.end(this.cache[path]);
         }
         catch (error) {
-            let e = error as Error;
+            const e = error as Error;
 
             this.base._log(`Static resource exception from: ${context.requestId} -> ${e?.stack + e?.message}`, "yellow");
 

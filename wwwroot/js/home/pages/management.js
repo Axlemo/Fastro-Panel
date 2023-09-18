@@ -48,7 +48,7 @@ async function loadUsers(identity) {
 
         const update = () => clone.find("#ul-user-btn-block-icon").html(`${user.Disabled ? "how_to_reg" : "block"}`);
 
-        if (localuser) {
+        if (localuser || user.UserId === 1) {
             clone.find("#ul-user-btn-delete").attr("disabled", true);
             clone.find("#ul-user-btn-block").attr("disabled", true);
         }
@@ -105,7 +105,7 @@ async function loadSessions(identity) {
     sessions.forEach(function (session) {
         const clone = $("#ul-session").clone(), localsession = session.SessionId === identity.SessionId;
         clone.attr("data-session-id", session.SessionId);
-        clone.attr("title", session.SessionId);
+        clone.attr("title", session.RemoteAddress ?? "Unknown IP address");
         clone.find("#ul-session-name").html(!localsession ? session.Username : `${session.Username} (current)`);
         clone.find("#ul-session-creation").html(new Date(session.CreationDate).toLocaleString());
 

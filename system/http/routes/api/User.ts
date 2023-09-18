@@ -1,6 +1,6 @@
 import assert from "assert";
 
-import { UserModel } from "../../../../database/provider";
+import { UserModel } from "../../../../database/models";
 
 import { AuthManager, InterfaceRoute, JsonResult, NoContentResult, RequestContext } from "../../../_classes";
 import { IRequestResult } from "../../../_interfaces";
@@ -98,7 +98,7 @@ export class UserUpdate extends InterfaceRoute {
         const data = context.input.body as UserDeletionDetails;
         const user = await this.checkUser(data.user_id);
 
-        (await AuthManager.getUserSessions(data.user_id)).forEach(async session => await session.destroy());
+        await AuthManager.removeUserSessions(data.user_id);
         await user.destroy();
 
         return new NoContentResult();

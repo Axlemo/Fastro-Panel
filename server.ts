@@ -5,7 +5,8 @@ import * as WS from "ws";
 
 import { randomUUID } from "crypto";
 
-import { SessionModel, connect_db } from "./database/provider";
+import { SessionModel } from "./database/models";
+import { connect_db } from "./database/provider";
 
 import { RequestContext, AuthManager, DirectoryRoute, InterfaceRoute } from "./system/_classes";
 import { IHttpServiceHandler } from "./system/_interfaces";
@@ -23,8 +24,11 @@ import Utils from "./utils/Toolbox";
 export default class HTTPServer {
     constructor(log: LogDelegate) {
         this._log = log;
+        log("Connecting to database...", "cyan");
 
         connect_db().then(() => {
+            log("Database successfully connected!", "blue");
+
             if (Conf.Websocket.EnableWebsocket) this.initWS();
             this.initHTTP();
 
@@ -73,8 +77,14 @@ export default class HTTPServer {
         const server = HTTP.createServer(async (req, res) => {
             try {
                 const context = new RequestContext({ req: req, res: res }, randomUUID(), this.getSharedTemplate,
-                    await AuthManager.getUserSession(Utils.getCookies(req)[Conf.Session.CookieName]),
+                    await AuthManager.getSessionByToken(Utils.getCookies(req)[Conf.Session.CookieName]),
                 );
+
+                // Remove the current session if it's expired
+                if (!context.session?.isValid) {
+                    context.session?.destroy();
+                    delete context.session;
+                }
 
                 // All responses (except for top-level server exceptions) should apply headers
                 if (Conf.Security.AddSecurityHeaders) this.applySecurityHeaders(context);
@@ -106,7 +116,7 @@ export default class HTTPServer {
                 }
             }
             catch (error) { // Catch top-level exceptions - serious errors that could cause crashes
-                let e = error as Error;
+                const e = error as Error;
 
                 this._log(e.message + e.stack, "redBright");
 
@@ -117,7 +127,7 @@ export default class HTTPServer {
 
         if (Conf.Websocket.EnableWebsocket) {
             server.on("upgrade", async (req, socket, head) => {
-                const session = await AuthManager.getUserSession(Utils.getCookies(req)[Conf.Session.CookieName]);
+                const session = await AuthManager.getSessionByToken(Utils.getCookies(req)[Conf.Session.CookieName]);
 
                 if (!session?.isValid) return req.destroy();
 

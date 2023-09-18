@@ -9,3 +9,4 @@ export { RouteData } from "./http/route/RouteData";
 
 export { ContentType } from "./http/ContentType";
 export { CookieOptions, CookieFlags, CookieSitePolicy } from "./http/CookieOptions";
+export { RateLimitEvent, RateLimitOptions } from "./http/RateLimiter";

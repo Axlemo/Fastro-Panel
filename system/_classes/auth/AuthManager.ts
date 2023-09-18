@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import { randomUUID, pbkdf2Sync } from "crypto";
 
-import { SessionModel, UserModel } from "../../../database/provider";
+import { SessionModel, UserModel } from "../../../database/models";
 
 import { User } from "../";
 import { CookieFlags, CookieSitePolicy, ValidationData } from "../../_types";
@@ -10,7 +10,7 @@ import Conf from "../../../utils/Configuration";
 import Utils from "../../../utils/Toolbox";
 
 export default class AuthManager {
-    static hashCredentials(passwd: string, salt: string) {
+    static hashCredentials(passwd: string, salt: string): string {
         return pbkdf2Sync(passwd, salt, 10000, 32, "sha256").toString("hex");
     }
 
@@ -18,7 +18,7 @@ export default class AuthManager {
         return this.hashCredentials(passwd, user.name + user.id) === user.passwordHash;
     }
 
-    static async checkLogin(name: string, passwd: string): Promise<ValidationData> {
+    static async checkLogin(name: string, passwd: string, ip?: string): Promise<ValidationData> {
         const target = await UserModel.findOne({ where: { name: name } });
 
         if (target !== null && this.verifyCredentials(target, passwd)) {
@@ -43,6 +43,7 @@ export default class AuthManager {
                 secret: Utils.sha256(token),
                 issue: new Date(Date.now()),
                 expiry: date,
+                remoteAddress: ip,
                 userId: user.id,
             });
 
@@ -65,7 +66,7 @@ export default class AuthManager {
         }
     }
 
-    static async getUserSession(token: string): Promise<SessionModel | undefined> {
+    static async getSessionByToken(token: string): Promise<SessionModel | undefined> {
         try {
             return await SessionModel.findOne({
                 where: { secret: Utils.sha256(token) },
@@ -91,5 +92,10 @@ export default class AuthManager {
 
     static async getSessionById(session_id: string): Promise<SessionModel | undefined> {
         return (await this.getAllSessions()).find(session => session.id === session_id);
+    }
+
+    static async removeUserSessions(user_id: number): Promise<void> {
+        const sessions = await this.getUserSessions(user_id);
+        for (const session of sessions) await session.destroy();
     }
 };

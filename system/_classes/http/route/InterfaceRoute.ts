@@ -1,5 +1,5 @@
 import { BadRequestResult, MethodNotAllowedResult } from "../result/status/4xxResult";
-import { InterfaceRouteData, HttpMethod } from "../../../_types";
+import { InterfaceRouteData, HttpMethod, RateLimitOptions } from "../../../_types";
 import { IRequestResult } from "../../../_interfaces";
 
 import Conf from "../../../../utils/Configuration";
@@ -18,9 +18,12 @@ export default class InterfaceRoute extends Route implements InterfaceRouteData 
         });
 
         this.methods = options.methods;
+        this.ratelimit = options.ratelimit;
     }
 
     methods: HttpMethod[];
+
+    ratelimit?: RateLimitOptions;
 
     async GET(context: RequestContext): Promise<IRequestResult> {
         return new MethodNotAllowedResult();

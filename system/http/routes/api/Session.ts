@@ -23,6 +23,7 @@ export class SessionList extends InterfaceRoute {
             UserId: item.userId,
             SessionId: item.id,
             CreationDate: item.issue,
+            RemoteAddress: item.remoteAddress,
         }));
 
         return new JsonResult(mapped_sessions);

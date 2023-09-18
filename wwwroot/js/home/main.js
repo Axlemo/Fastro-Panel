@@ -44,12 +44,14 @@ function snackbar(message, timeout = 2000) {
 $("#change-pwd").click(async () => {
     Swal.fire({
         title: "Change your password",
-        html: `<input id="swal-input1" class="swal2-input" placeholder="Current password" type="password">` +
+        html: "<div>You will be signed out of every session after changing your password.</div>" +
+            `<input id="swal-input1" class="swal2-input" placeholder="Current password" type="password">` +
             `<input id="swal-input2" class="swal2-input" placeholder="New password" type="password">` +
             `<input id="swal-input3" class="swal2-input" placeholder="Confirm new password" type="password">`,
         showLoaderOnConfirm: true,
         showCancelButton: true,
         reverseButtons: true,
+        focusConfirm: false,
         confirmButtonText: "Change",
         cancelButtonText: "Cancel",
         preConfirm: () => {
@@ -61,6 +63,7 @@ $("#change-pwd").click(async () => {
                 Swal.fire({
                     icon: "success",
                     title: "Successfully changed password",
+                    didClose: () => window.location.reload(),
                 });
             }).catch((e) => {
                 Swal.showValidationMessage(e.responseText);

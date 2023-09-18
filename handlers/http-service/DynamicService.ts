@@ -1,8 +1,8 @@
 import { AssertionError } from "assert";
 
-import { DirectoryRoute, InputHandler, InterfaceRoute, RequestContext } from "../../system/_classes";
+import { DirectoryRoute, InputHandler, InterfaceRoute, RateLimiter, RequestContext } from "../../system/_classes";
 import { IHttpServiceHandler } from "../../system/_interfaces";
-import { ContentType, HttpMethod } from "../../system/_types";
+import { ContentType } from "../../system/_types";
 import { Routes } from "../../system/http/routes";
 
 import HTTPServer from "../../server";
@@ -15,10 +15,14 @@ export default class DynamicService implements IHttpServiceHandler {
 
     base: HTTPServer;
 
+    limiter: RateLimiter = new RateLimiter();
+
     async process(context: RequestContext, url: string) {
         const route = Routes.find(item => item.path === url);
 
         if (route) {
+            const key = route.path + context.req.socket.remoteAddress;
+
             if (route instanceof DirectoryRoute) {
                 if (route.blocked || !route.isUserAuthorized(context)) return this.base.renderActionFailure(context, Conf.Static.Integrated.ErrorFiles.Unauthorized, 403);
                 if (context.method !== "GET") return context.status(405).end();
@@ -26,6 +30,11 @@ export default class DynamicService implements IHttpServiceHandler {
             else if (route instanceof InterfaceRoute) {
                 if (route.blocked || !route.isUserAuthorized(context)) return context.status(403).end();
                 if (!route.methods.includes(context.method)) return context.status(405).end();
+
+                if (route.ratelimit && this.limiter.checkTimeout(key, route.ratelimit.maxRequests, route.ratelimit.preserveRate) > 0) {
+                    this.base._log(`Rate limit triggered at: [${route.path}].`, "yellow");
+                    return context.status(429).end(route.ratelimit.message ?? "Too Many Requests");
+                }
             }
 
             if (context.session?.isValid || !route.requiresLogin) {
@@ -42,10 +51,15 @@ export default class DynamicService implements IHttpServiceHandler {
                     try {
                         const action = await route.onRequest(context), result = await action.execute(context);
 
+                        // When the action execution is successful, the rate counter is increased
+                        if (route instanceof InterfaceRoute && route.ratelimit) {
+                            this.limiter.checkRate(key, route.ratelimit.maxRequests, route.ratelimit.timeout, route.ratelimit.preserveRate);
+                        }
+
                         context.end(result ?? undefined);
                     }
                     catch (error) {
-                        let e = error as Error;
+                        const e = error as Error;
 
                         // AssertionError is thrown when invalid input data types are detected
                         switch (e?.constructor) {
@@ -67,7 +81,7 @@ export default class DynamicService implements IHttpServiceHandler {
             }
             else if (!context.session?.isValid) {
                 if (route instanceof InterfaceRoute) {
-                    return context.status(401).end();
+                    return context.status(401).end("Session expired or invalid.");
                 }
 
                 //this.base.renderActionFailure(context, Conf.Static.Integrated.ErrorFiles.Unauthorized, 401);

@@ -42,6 +42,7 @@
     <Content Include="system\http\pages\panel.html" />
     <Content Include="system\http\pages\management.html" />
     <Content Include="system\http\pages\updates.html" />
+    <Content Include="system\_types\http\RateLimiter.ts" />
     <Content Include="wwwroot\css\home\pages\landing.css" />
     <Content Include="wwwroot\css\home\main.css" />
     <Content Include="wwwroot\css\home\pages\updates.css" />
@@ -119,6 +120,7 @@
     <TypeScriptCompile Include="system\http\routes\dir\Auth.ts" />
     <TypeScriptCompile Include="system\http\routes\dir\Panel.ts" />
     <TypeScriptCompile Include="system\http\routes\index.ts" />
+    <TypeScriptCompile Include="system\_classes\http\RateLimiter.ts" />
     <TypeScriptCompile Include="system\_types\auth\ValidationData.ts" />
     <TypeScriptCompile Include="utils\Configuration.ts" />
     <TypeScriptCompile Include="utils\FileToolbox.ts" />

@@ -1,6 +1,6 @@
 import * as HTTP from "http";
 
-import { SessionModel } from "../../../database/provider";
+import { SessionModel } from "../../../database/models";
 
 import { CookieOptions, ContentType, InputTypes, HttpMethod } from "../../_types";
 
